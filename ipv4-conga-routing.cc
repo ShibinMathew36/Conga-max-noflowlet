@@ -533,13 +533,24 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
 
         if (toLeafItr != m_congaToLeafTable.end ())
         {
-          std::vector<uint32_t> temp = (toLeafItr->second)[ipv4CongaTag.GetFbLbTag ()].second;
-          if (temp.size() == 100)
+          if ((toLeafItr->second).find(ipv4CongaTag.GetFbLbTag ()) != (toLeafItr->second).end())
           {
-            temp.erase(temp.begin());
+              std::vector<uint32_t> temp = (toLeafItr->second)[ipv4CongaTag.GetFbLbTag ()].second;
+              if (temp.size() >= 100)
+              {
+                  temp.erase(temp.begin());
+              }
+              temp.push_back(ipv4CongaTag.GetFbMetric ());
+              (toLeafItr->second)[ipv4CongaTag.GetFbLbTag ()] = std::make_pair(Simulator::Now (), temp);
+
           }
-          temp.push_back(ipv4CongaTag.GetFbMetric ());
-          (toLeafItr->second)[ipv4CongaTag.GetFbLbTag ()] = std::make_pair(Simulator::Now (), temp);
+          else
+          {
+              std::vector<uint32_t> temp1;
+              temp1.push_back(ipv4CongaTag.GetFbMetric ());
+              (toLeafItr->second)[ipv4CongaTag.GetFbLbTag ()] = std::make_pair(Simulator::Now (), temp1);
+
+          }
         }
         else
         {
@@ -563,10 +574,10 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
       Ptr<Ipv4Route> route = Ipv4CongaRouting::ConstructIpv4Route (selectedPort, destAddress);
       ucb (route, packet, header);
 
-      Ipv4CongaRouting::PrintDreTable ();
-      Ipv4CongaRouting::PrintCongaToLeafTable ();
+      //Ipv4CongaRouting::PrintDreTable ();
       NS_LOG_INFO (this << " Printing Conga table after update");
-      Ipv4CongaRouting::PrintCongaFromLeafTable ();
+      Ipv4CongaRouting::PrintCongaToLeafTable ();
+      //Ipv4CongaRouting::PrintCongaFromLeafTable ();
 
       return true;
     }
@@ -590,7 +601,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
     // Update local dre
     //uint32_t X = Ipv4CongaRouting::UpdateLocalDre (header, packet, selectedPort);
 
-    NS_LOG_INFO (this << " Forwarding Conga packet, Quantized X on port: " << selectedPort
+    NS_LOG_LOGIC (this << " Forwarding Conga packet, Quantized X on port: " << selectedPort
             //<< " is: " << Ipv4CongaRouting::QuantizingX (selectedPort, X)
             << ", LbTag in Conga header is: " << ipv4CongaTag.GetLbTag ()
             << ", Time in the conga header: " << ipv4CongaTag.GetCe ()
@@ -722,7 +733,12 @@ Ipv4CongaRouting::AgingEvent ()
       {
         if (Simulator::Now () - (innerItr->second).first > m_agingTime)
         {
-          (innerItr->second).second.clear();
+            NS_LOG_INFO (this << " Aging event Clearing port entry for port: " << (innerItr->first));
+            (itr->second).erase(innerItr);
+            if ((itr->second).empty ())
+            {
+                m_congaToLeafTable.erase (itr);
+            }
         }
         else
         {
@@ -789,16 +805,20 @@ Ipv4CongaRouting::PrintCongaToLeafTable ()
   {
     oss << "Leaf ID: " << itr->first << std::endl<<"\t";
     std::map<uint32_t, std::pair<Time, std::vector<uint32_t> > >::iterator innerItr = (itr->second).begin ();
-    for ( ; innerItr != (itr->second).end (); ++innerItr)
+    if ((itr->second).size() > 1)
     {
-      oss << "{ port: "
-          << innerItr->first << ", ce: ";
-          std::vector<uint32_t>::iterator temp = (innerItr->second).second.begin();
-      for (; temp != (innerItr->second).second.end(); ++temp)
-      {
-        oss << *temp << "  ";
-      }
+        for ( ; innerItr != (itr->second).end (); ++innerItr)
+        {
+            oss << "{ port: "
+                << innerItr->first << ", ce: ";
+            std::vector<uint32_t>::iterator temp = (innerItr->second).second.begin();
+            for (; temp != (innerItr->second).second.end(); ++temp)
+            {
+                oss << *temp << "  ";
+            }
+        }
     }
+
     oss << std::endl;
   }
   oss << "============================";
