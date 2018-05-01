@@ -326,10 +326,10 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
 
       // Flowlet table look up
       struct Flowlet *flowlet = NULL;
-
+/*
       // If the flowlet table entry is valid, return the port
       std::map<uint32_t, struct Flowlet *>::iterator flowletItr = m_flowletTable.find (flowId);
-      NS_LOG_INFO(this << "Flow ID is:  "<< flowId);
+      //NS_LOG_INFO(this << "Flow ID is:  "<< flowId);
       if (flowletItr != m_flowletTable.end ())
       {
         flowlet = flowletItr->second;
@@ -342,7 +342,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
 
           // Return the port information used for routing routine to select the port
           selectedPort = flowlet->port;
-          NS_LOG_INFO(this << "===========================================Hitting inside flowlet table and chose port " << selectedPort);
+          //NS_LOG_INFO(this << "===========================================Hitting inside flowlet table and chose port " << selectedPort);
           // Construct Conga Header for the packet
           ipv4CongaTag.SetLbTag (selectedPort);
           uint32_t temp = now.GetMicroSeconds();
@@ -364,8 +364,8 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
           return true;
         }
       }
-
-      NS_LOG_INFO (this << " ============================Flowlet expires, calculate the new port");
+       */
+      //NS_LOG_INFO (this << " ============================Flowlet expires, calculate the new port");
       // Not hit. Determine the port
 
       // 1. Select port congestion information based on dest leaf switch id
@@ -383,7 +383,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
       for ( ; routeEntryItr != routeEntries.end (); ++routeEntryItr)
       {
         uint32_t port = (*routeEntryItr).port;
-        NS_LOG_INFO(this<<"candidate port for begin: " << port);
+        //NS_LOG_INFO(this<<"candidate port for begin: " << port);
         //uint32_t localCongestion = 0;
         uint32_t remoteCongestion = minPortCongestion;
 
@@ -401,7 +401,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
         {
           std::vector<uint32_t> temp = (remoteCongestionItr->second).second;
           remoteCongestion = (temp.size()) ? *std::max_element(temp.begin(), temp.end()) : 0;
-          NS_LOG_INFO(this<<"remote congestion for: " << port <<"   is: " << remoteCongestion);
+          //NS_LOG_INFO(this<<"remote congestion for: " << port <<"   is: " << remoteCongestion);
 
         }
 
@@ -413,13 +413,13 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
           minPortCongestion = remoteCongestion;
           portCandidates.clear();
           portCandidates.push_back(port);
-          NS_LOG_INFO (this << " *********flushing and adding to portcandidate" << port);
+          //NS_LOG_INFO (this << " *********flushing and adding to portcandidate" << port);
         }
         if (remoteCongestion == minPortCongestion)
         {
           // Equally good port
           portCandidates.push_back(port);
-          NS_LOG_INFO (this << " ********* adding to portcandidate" << port << " vector size "<< portCandidates.size());
+          //NS_LOG_INFO (this << " ********* adding to portcandidate" << port << " vector size "<< portCandidates.size());
         }
       }
 
@@ -436,6 +436,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
       {
         // If there are no cached ports, we randomly choose a good port
         selectedPort = portCandidates[rand() % portCandidates.size ()];
+        /*
         if (flowlet == NULL)
         {
           struct Flowlet *newFlowlet = new Flowlet;
@@ -448,6 +449,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
           flowlet->port = selectedPort;
           flowlet->activeTime = now;
         }
+         */
       }
 
       // 4. Construct Conga Header for the packet
@@ -466,16 +468,16 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
       Ptr<Ipv4Route> route = Ipv4CongaRouting::ConstructIpv4Route (selectedPort, destAddress);
       ucb (route, packet, header);
 
-      NS_LOG_INFO (this << " Sending Conga on leaf switch: " << m_leafId << " - LbTag: " << selectedPort << ", Sent time: " << temp << ", FbLbTag: " << fbLbTag << ", FeedbackTIme: " << fbMetric);
+      //NS_LOG_INFO (this << " Sending Conga on leaf switch: " << m_leafId << " - LbTag: " << selectedPort << ", Sent time: " << temp << ", FbLbTag: " << fbLbTag << ", FeedbackTIme: " << fbMetric);
 
       return true;
     }
     else
     {
-      NS_LOG_INFO (this << " Receiving Conga - LbTag: " << ipv4CongaTag.GetLbTag ()
-              << ", Sent Time: " << ipv4CongaTag.GetCe ()
-              << ", FbLbTag: " << ipv4CongaTag.GetFbLbTag ()
-              << ", FeedbackTime: " << ipv4CongaTag.GetFbMetric ());
+      //NS_LOG_INFO (this << " Receiving Conga - LbTag: " << ipv4CongaTag.GetLbTag ()
+        //      << ", Sent Time: " << ipv4CongaTag.GetCe ()
+        //      << ", FbLbTag: " << ipv4CongaTag.GetFbLbTag ()
+         //     << ", FeedbackTime: " << ipv4CongaTag.GetFbMetric ());
 
       // Forwarding the packet to destination
 
@@ -498,7 +500,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
         std::map<uint32_t, FeedbackInfo> newMap;
         FeedbackInfo feedbackInfo;
         feedbackInfo.ce = temp - ipv4CongaTag.GetCe ();
-        NS_LOG_INFO (this << " calculated delay in Microseconds :"<< feedbackInfo.ce);
+        //NS_LOG_INFO (this << " calculated delay in Microseconds :"<< feedbackInfo.ce);
         feedbackInfo.change = true;
         feedbackInfo.updateTime = Simulator::Now ();
         newMap[ipv4CongaTag.GetLbTag ()] = feedbackInfo;
@@ -511,7 +513,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
         {
           FeedbackInfo feedbackInfo;
           feedbackInfo.ce = temp - ipv4CongaTag.GetCe ();
-          NS_LOG_INFO (this << " there is no entry for the port calculated delay in Microseconds :"<< feedbackInfo.ce);
+          //NS_LOG_INFO (this << " there is no entry for the port calculated delay in Microseconds :"<< feedbackInfo.ce);
           feedbackInfo.change = true;
           feedbackInfo.updateTime = Simulator::Now ();
           (fromLeafItr->second)[ipv4CongaTag.GetLbTag ()] = feedbackInfo;
@@ -519,7 +521,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
         else
         {
           (innerItr->second).ce = temp - ipv4CongaTag.GetCe ();
-          NS_LOG_INFO (this << " updating existing information for port " << ipv4CongaTag.GetLbTag () << "for leafid " << sourceLeafId << " in from table calculated delay in Microseconds :"<< (innerItr->second).ce);
+          //NS_LOG_INFO (this << " updating existing information for port " << ipv4CongaTag.GetLbTag () << "for leafid " << sourceLeafId << " in from table calculated delay in Microseconds :"<< (innerItr->second).ce);
           (innerItr->second).change = true;
           (innerItr->second).updateTime = Simulator::Now ();
         }
@@ -536,7 +538,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
           if ((toLeafItr->second).find(ipv4CongaTag.GetFbLbTag ()) != (toLeafItr->second).end())
           {
               std::vector<uint32_t> temp = (toLeafItr->second)[ipv4CongaTag.GetFbLbTag ()].second;
-              if (temp.size() >= 100)
+              while (temp.size() >= 1000)
               {
                   temp.erase(temp.begin());
               }
@@ -575,7 +577,7 @@ Ipv4CongaRouting::RouteInput (Ptr<const Packet> p, const Ipv4Header &header, Ptr
       ucb (route, packet, header);
 
       //Ipv4CongaRouting::PrintDreTable ();
-      NS_LOG_INFO (this << " Printing Conga table after update");
+      //NS_LOG_INFO (this << " Printing Conga table after update");
       Ipv4CongaRouting::PrintCongaToLeafTable ();
       //Ipv4CongaRouting::PrintCongaFromLeafTable ();
 
@@ -733,7 +735,7 @@ Ipv4CongaRouting::AgingEvent ()
       {
         if (Simulator::Now () - (innerItr->second).first > m_agingTime)
         {
-            NS_LOG_INFO (this << " Aging event Clearing port entry for port: " << (innerItr->first));
+            NS_LOG_INFO (this << " ***********************Aging event Clearing port entry for port: " << (innerItr->first));
             (itr->second).erase(innerItr);
             if ((itr->second).empty ())
             {
@@ -797,7 +799,7 @@ Ipv4CongaRouting::QuantizingX (uint32_t interface, uint32_t X)
 void
 Ipv4CongaRouting::PrintCongaToLeafTable ()
 {
-
+/*
   std::ostringstream oss;
   oss << "===== CongaToLeafTable For Leaf: " << m_leafId <<"=====" << std::endl;
   std::map<uint32_t, std::map<uint32_t, std::pair<Time, std::vector<uint32_t> > > >::iterator itr = m_congaToLeafTable.begin ();
@@ -823,7 +825,7 @@ Ipv4CongaRouting::PrintCongaToLeafTable ()
   }
   oss << "============================";
   NS_LOG_INFO (oss.str ());
-
+*/
 }
 
 void
